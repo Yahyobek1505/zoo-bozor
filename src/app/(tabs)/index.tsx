@@ -15,11 +15,14 @@ import { FigmaHeader } from '@/components/FigmaHeader';
 import { FigmaAnimalCard } from '@/components/FigmaAnimalCard';
 import { CATEGORIES_AVATARS, ZooColors } from '@/constants/zooTheme';
 import { FIGMA_ANIMALS, FigmaAnimalListing } from '@/data/figmaData';
+import { useLanguageStore } from '@/store/useLanguageStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t } = useLanguageStore();
+  const tr = t();
   const [selectedRegion, setSelectedRegion] = useState('Toshkent');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -100,7 +103,15 @@ export default function HomeScreen() {
                   styles.categoryLabel,
                   isSelected && styles.categoryLabelActive,
                 ]}>
-                {cat.name}
+                {cat.id === 'cats'
+                  ? tr.categories.cats
+                  : cat.id === 'dogs'
+                  ? tr.categories.dogs
+                  : cat.id === 'birds'
+                  ? tr.categories.birds
+                  : cat.id === 'poultry'
+                  ? tr.categories.poultry
+                  : tr.categories.livestock}
               </Text>
             </Pressable>
           );
@@ -113,17 +124,17 @@ export default function HomeScreen() {
     <View style={styles.footerContainer}>
       {/* Ko'proq (Load More) button */}
       <Pressable style={styles.loadMoreBtn}>
-        <Text style={styles.loadMoreText}>Ko’proq</Text>
+        <Text style={styles.loadMoreText}>{tr.loadMore}</Text>
         <Ionicons name="chevron-down" size={16} color={ZooColors.navyDark} />
       </Pressable>
 
       {/* O'xshash e'lonlar */}
       <View style={styles.similarHeader}>
-        <Text style={styles.similarTitle}>O’xshash e’lonlar</Text>
+        <Text style={styles.similarTitle}>{tr.similarListings}</Text>
         <Pressable
           onPress={() => router.push('/(tabs)/market')}
           style={styles.allLinkRow}>
-          <Text style={styles.allLinkText}>Barchasi</Text>
+          <Text style={styles.allLinkText}>{tr.seeAll}</Text>
           <Ionicons
             name="chevron-forward"
             size={14}

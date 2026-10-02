@@ -12,9 +12,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { ZooColors } from '@/constants/zooTheme';
+import { useLanguageStore } from '@/store/useLanguageStore';
+import { AppLanguage } from '@/constants/translations';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { language, setLanguage, t } = useLanguageStore();
+  const tr = t();
 
   const [nickName, setNickName] = useState('thalipof');
   const [name, setName] = useState('Tolipov Ixtiyorjon');
@@ -23,7 +27,7 @@ export default function SettingsScreen() {
   const [birthYear, setBirthYear] = useState('15.11.1994');
 
   const handleSave = () => {
-    Alert.alert('Saqlandi', 'Ma\'lumotlaringiz muvaffaqiyatli saqlandi!', [
+    Alert.alert('OK', 'Saqlandi!', [
       { text: 'OK', onPress: () => router.back() },
     ]);
   };
@@ -37,7 +41,7 @@ export default function SettingsScreen() {
         </Pressable>
         <View style={styles.titleRow}>
           <Feather name="edit" size={22} color={ZooColors.navyDark} />
-          <Text style={styles.title}>Sozlama</Text>
+          <Text style={styles.title}>{tr.settingsTitle}</Text>
         </View>
         <View style={{ width: 24 }} />
       </View>
@@ -97,6 +101,36 @@ export default function SettingsScreen() {
             value={birthYear}
             onChangeText={setBirthYear}
           />
+        </View>
+
+        {/* Tilni o'zgartirish (Language Selector) */}
+        <View style={styles.fieldBox}>
+          <Text style={styles.label}>{tr.languageSetting}</Text>
+          <View style={styles.langRow}>
+            {(
+              [
+                { id: 'uz', title: 'O’zbek' },
+                { id: 'ru', title: 'Русский' },
+                { id: 'en', title: 'English' },
+              ] as const
+            ).map((item) => (
+              <Pressable
+                key={item.id}
+                onPress={() => setLanguage(item.id)}
+                style={[
+                  styles.langOptionBtn,
+                  language === item.id && styles.langOptionBtnActive,
+                ]}>
+                <Text
+                  style={[
+                    styles.langOptionText,
+                    language === item.id && styles.langOptionTextActive,
+                  ]}>
+                  {item.title}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         {/* SAQLASH Button */}
@@ -173,5 +207,32 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  langRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  langOptionBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  langOptionBtnActive: {
+    backgroundColor: '#0E1424',
+    borderColor: '#D2FF00',
+  },
+  langOptionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  langOptionTextActive: {
+    color: '#D2FF00',
   },
 });

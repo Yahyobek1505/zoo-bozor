@@ -13,9 +13,13 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ZooColors } from '@/constants/zooTheme';
+import { useLanguageStore } from '@/store/useLanguageStore';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { t } = useLanguageStore();
+  const tr = t();
+
   const [activeTab, setActiveTab] = useState<'info' | 'balance'>('info');
   const [adsTab, setAdsTab] = useState<'my_ads' | 'rejected'>('my_ads');
   
@@ -23,9 +27,9 @@ export default function ProfileScreen() {
   const [showPhone, setShowPhone] = useState(true);
 
   const handleLogout = () => {
-    Alert.alert('Chiqish', 'Haqiqatan ham profilingizdan chiqmoqchimisiz?', [
-      { text: 'Bekor qilish', style: 'cancel' },
-      { text: 'Chiqish', style: 'destructive', onPress: () => router.push('/login') },
+    Alert.alert(tr.logout, '', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: tr.logout, style: 'destructive', onPress: () => router.replace('/login') },
     ]);
   };
 
@@ -102,7 +106,7 @@ export default function ProfileScreen() {
                 styles.segmentText,
                 activeTab === 'info' && styles.segmentTextActive,
               ]}>
-              Shaxsiy Ma’lumot
+              {tr.personalInfo}
             </Text>
           </Pressable>
 
@@ -123,7 +127,7 @@ export default function ProfileScreen() {
                   styles.segmentText,
                   activeTab === 'balance' && styles.segmentTextActive,
                 ]}>
-                BALANS
+                {tr.balance}
               </Text>
             </View>
           </Pressable>
@@ -201,7 +205,7 @@ export default function ProfileScreen() {
                 styles.adsTabText,
                 adsTab === 'my_ads' && styles.adsTabTextActive,
               ]}>
-              E’lonlarim
+              {tr.myListings}
             </Text>
             {adsTab === 'my_ads' && <View style={styles.adsTabUnderline} />}
           </Pressable>
@@ -217,7 +221,7 @@ export default function ProfileScreen() {
                 styles.adsTabText,
                 adsTab === 'rejected' ? styles.adsTabTextActive : styles.adsTabTextMuted,
               ]}>
-              Rad Etilgan
+              {tr.rejectedListings}
             </Text>
           </Pressable>
         </View>

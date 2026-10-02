@@ -13,6 +13,8 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { UZBEKISTAN_REGIONS, ZooColors } from '@/constants/zooTheme';
 
+import { useLanguageStore } from '@/store/useLanguageStore';
+
 interface Props {
   variant?: 'home' | 'market';
   searchQuery?: string;
@@ -31,6 +33,8 @@ export const FigmaHeader: React.FC<Props> = ({
   onFilterPress,
 }) => {
   const router = useRouter();
+  const { t } = useLanguageStore();
+  const tr = t();
   const [regionModalVisible, setRegionModalVisible] = useState(false);
 
   return (
@@ -67,8 +71,8 @@ export const FigmaHeader: React.FC<Props> = ({
               style={styles.input}
               placeholder={
                 variant === 'market'
-                  ? 'Kategoriya bo’yicha..'
-                  : 'Qidiruv'
+                  ? tr.categorySearchPlaceholder
+                  : tr.searchPlaceholder
               }
               placeholderTextColor="#94A3B8"
               value={searchQuery}
@@ -104,7 +108,7 @@ export const FigmaHeader: React.FC<Props> = ({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Hududni tanlang</Text>
+              <Text style={styles.modalTitle}>{tr.selectRegion}</Text>
               <Pressable onPress={() => setRegionModalVisible(false)}>
                 <Ionicons name="close" size={22} color={ZooColors.textDark} />
               </Pressable>

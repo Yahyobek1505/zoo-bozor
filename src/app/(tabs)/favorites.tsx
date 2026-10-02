@@ -12,9 +12,13 @@ import { useRouter } from 'expo-router';
 import { FigmaAnimalCard } from '@/components/FigmaAnimalCard';
 import { FIGMA_ANIMALS } from '@/data/figmaData';
 import { ZooColors } from '@/constants/zooTheme';
+import { useLanguageStore } from '@/store/useLanguageStore';
 
 export default function FavoritesScreen() {
   const router = useRouter();
+  const { t } = useLanguageStore();
+  const tr = t();
+
   const [savedIds, setSavedIds] = useState<string[]>([
     'f-5', // Karlik
     'f-6', // Britanka
@@ -38,7 +42,7 @@ export default function FavoritesScreen() {
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Ionicons name="bookmark" size={24} color={ZooColors.navyDark} />
-          <Text style={styles.headerTitle}>Saqlangan</Text>
+          <Text style={styles.headerTitle}>{tr.tabSaved}</Text>
         </View>
 
         <Pressable

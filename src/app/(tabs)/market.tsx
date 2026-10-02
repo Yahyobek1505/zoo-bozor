@@ -14,9 +14,12 @@ import { FigmaHeader } from '@/components/FigmaHeader';
 import { FigmaProductCard } from '@/components/FigmaProductCard';
 import { FIGMA_PRODUCTS } from '@/data/figmaData';
 import { ZooColors } from '@/constants/zooTheme';
+import { useLanguageStore } from '@/store/useLanguageStore';
 
 export default function MarketScreen() {
   const router = useRouter();
+  const { t } = useLanguageStore();
+  const tr = t();
   const [selectedRegion, setSelectedRegion] = useState('Qo’qon');
   const [searchQuery, setSearchQuery] = useState('');
   const [savedIds, setSavedIds] = useState<string[]>(['fp-1', 'fp-2', 'fp-5']);
@@ -64,17 +67,17 @@ export default function MarketScreen() {
     <View style={styles.footerContainer}>
       {/* Ko'proq (Load More) */}
       <Pressable style={styles.loadMoreBtn}>
-        <Text style={styles.loadMoreText}>Ko’proq</Text>
+        <Text style={styles.loadMoreText}>{tr.loadMore}</Text>
         <Ionicons name="chevron-down" size={16} color={ZooColors.navyDark} />
       </Pressable>
 
       {/* O'xshash e'lonlar */}
       <View style={styles.similarHeader}>
-        <Text style={styles.similarTitle}>O’xshash e’lonlar</Text>
+        <Text style={styles.similarTitle}>{tr.similarListings}</Text>
         <Pressable
           onPress={() => router.push('/(tabs)')}
           style={styles.allLinkRow}>
-          <Text style={styles.allLinkText}>Barchasi</Text>
+          <Text style={styles.allLinkText}>{tr.seeAll}</Text>
           <Ionicons
             name="chevron-forward"
             size={14}
