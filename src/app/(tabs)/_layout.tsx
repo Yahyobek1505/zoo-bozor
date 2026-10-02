@@ -3,14 +3,17 @@ import { View, StyleSheet, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Image } from 'expo-image';
 
+const ACTIVE_COLOR = '#D0FE17';
+const INACTIVE_COLOR = '#FFFFFF';
+
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: '#D2FF00', // Neon lime
-        tabBarInactiveTintColor: '#FFFFFF',
+        tabBarActiveTintColor: ACTIVE_COLOR,
+        tabBarInactiveTintColor: INACTIVE_COLOR,
         tabBarStyle: {
           backgroundColor: '#0B0F19',
           position: 'absolute',
@@ -37,10 +40,15 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <View style={styles.iconBox}>
               <Image
-                source={require('@/assets/images/nav/nav_bag.png')}
+                source={
+                  focused
+                    ? require('@/assets/images/nav/nav_bag_active.png')
+                    : require('@/assets/images/nav/nav_bag.png')
+                }
+                tintColor={focused ? ACTIVE_COLOR : INACTIVE_COLOR}
                 style={[
                   styles.navIcon,
-                  { tintColor: focused ? '#D2FF00' : '#FFFFFF' },
+                  { tintColor: focused ? ACTIVE_COLOR : INACTIVE_COLOR },
                 ]}
                 contentFit="contain"
               />
@@ -56,10 +64,15 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <View style={styles.iconBox}>
               <Image
-                source={require('@/assets/images/nav/nav_target.png')}
+                source={
+                  focused
+                    ? require('@/assets/images/nav/nav_target_active.png')
+                    : require('@/assets/images/nav/nav_target.png')
+                }
+                tintColor={focused ? ACTIVE_COLOR : INACTIVE_COLOR}
                 style={[
                   styles.navIconTarget,
-                  { tintColor: focused ? '#D2FF00' : '#FFFFFF' },
+                  { tintColor: focused ? ACTIVE_COLOR : INACTIVE_COLOR },
                 ]}
                 contentFit="contain"
               />
@@ -75,10 +88,15 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <View style={styles.centerLogoBtn}>
               <Image
-                source={require('@/assets/images/nav/nav_cat.png')}
+                source={
+                  focused
+                    ? require('@/assets/images/nav/nav_cat_active.png')
+                    : require('@/assets/images/nav/nav_cat.png')
+                }
+                tintColor={focused ? ACTIVE_COLOR : INACTIVE_COLOR}
                 style={[
                   styles.navIconCat,
-                  { tintColor: focused ? '#D2FF00' : '#FFFFFF' },
+                  { tintColor: focused ? ACTIVE_COLOR : INACTIVE_COLOR },
                 ]}
                 contentFit="contain"
               />
@@ -94,10 +112,15 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <View style={styles.iconBox}>
               <Image
-                source={require('@/assets/images/nav/nav_bookmark.png')}
+                source={
+                  focused
+                    ? require('@/assets/images/nav/nav_bookmark_active.png')
+                    : require('@/assets/images/nav/nav_bookmark.png')
+                }
+                tintColor={focused ? ACTIVE_COLOR : INACTIVE_COLOR}
                 style={[
                   styles.navIconBookmark,
-                  { tintColor: focused ? '#D2FF00' : '#FFFFFF' },
+                  { tintColor: focused ? ACTIVE_COLOR : INACTIVE_COLOR },
                 ]}
                 contentFit="contain"
               />
@@ -113,10 +136,15 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <View style={styles.iconBox}>
               <Image
-                source={require('@/assets/images/nav/nav_user.png')}
+                source={
+                  focused
+                    ? require('@/assets/images/nav/nav_user_active.png')
+                    : require('@/assets/images/nav/nav_user.png')
+                }
+                tintColor={focused ? ACTIVE_COLOR : INACTIVE_COLOR}
                 style={[
                   styles.navIconUser,
-                  { tintColor: focused ? '#D2FF00' : '#FFFFFF' },
+                  { tintColor: focused ? ACTIVE_COLOR : INACTIVE_COLOR },
                 ]}
                 contentFit="contain"
               />

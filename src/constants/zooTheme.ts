@@ -3,7 +3,7 @@ export const ZooColors = {
   navyDark: '#0E1424',       // Deep navy blue used in headers, bottom bar, primary buttons
   navyCard: '#1B2544',       // Header card background
   navyLight: '#263352',      // Secondary navy elements, user chat bubbles
-  neonLime: '#D2FF00',       // Vibrant neon lime accent (active pills, badges, CTA)
+  neonLime: '#D0FE17',       // Vibrant neon lime accent (active pills, badges, CTA)
   neonLimeDark: '#A8CC00',
   aksiyaRed: '#FF1E1E',       // Red AKSIYA sale badge
   starYellow: '#FBBF24',     // Rating stars
