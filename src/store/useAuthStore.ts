@@ -5,6 +5,8 @@ import {
   createUserWithEmailAndPassword,
   signInAnonymously,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
@@ -38,7 +40,7 @@ export const getFirebaseErrorMessage = (
     case 'auth/unauthorized-domain':
       return 'Ushbu domen (localhost) Firebase Console ruxsat berilgan domenlar ro’yxatida yo’q.';
     case 'auth/popup-blocked':
-      return 'Brauzer Google oynasini blokladi. Iltimos, brauzer manzil satridan pop-up oynalarga ruxsat bering.';
+      return 'Brauzer Google oynasini ochishga ruxsat bermadi. Qayta yo’naltirish orqali kirilmoqda...';
     case 'auth/popup-closed-by-user':
       return 'Google kirish oynasi tanlanmasdan yopildi.';
     case 'auth/cancelled-popup-request':
@@ -104,12 +106,41 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signInWithGoogle: async () => {
     set({ isLoading: true, error: null });
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // Detect mobile or Safari browsers where popups are blocked by default
+    const isMobile =
+      typeof navigator !== 'undefined' &&
+      /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      // Use seamless full-page redirect on mobile to avoid popup blockers
+      try {
+        await signInWithRedirect(auth, provider);
+        return;
+      } catch (redirectErr: any) {
+        const msg = getFirebaseErrorMessage(redirectErr?.code || '', redirectErr?.message);
+        set({ error: msg, isLoading: false });
+        throw redirectErr;
+      }
+    }
+
+    // On desktop, try popup first; if blocked, fall back immediately to redirect
     try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
       const cred = await signInWithPopup(auth, provider);
       set({ user: cred.user, isGuest: false, isLoading: false, error: null });
     } catch (err: any) {
+      if (err?.code === 'auth/popup-blocked') {
+        try {
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectErr: any) {
+          const msg = getFirebaseErrorMessage(redirectErr?.code || '', redirectErr?.message);
+          set({ error: msg, isLoading: false });
+          throw redirectErr;
+        }
+      }
       const msg = getFirebaseErrorMessage(err?.code || '', err?.message);
       set({ error: msg, isLoading: false });
       throw err;
@@ -141,6 +172,24 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   initAuthListener: () => {
+    // Check if returning from a Google redirect
+    if (typeof window !== 'undefined') {
+      getRedirectResult(auth)
+        .then((cred) => {
+          if (cred && cred.user) {
+            set({
+              user: cred.user,
+              isGuest: false,
+              isLoading: false,
+              isInitialized: true,
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn('Google redirect result check:', err?.code, err?.message);
+        });
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       set({
         user: firebaseUser,

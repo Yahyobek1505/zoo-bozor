@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,7 @@ export default function LoginScreen() {
   const tr = t();
 
   const {
+    user,
     signInWithEmail,
     signUpWithEmail,
     signInWithGoogle,
@@ -40,6 +41,12 @@ export default function LoginScreen() {
   const [helpModalVisible, setHelpModalVisible] = useState(false);
 
   const activeError = localError || error;
+
+  useEffect(() => {
+    if (user) {
+      router.replace('/(tabs)');
+    }
+  }, [user]);
 
   const handleAuthAction = async () => {
     setLocalError(null);
