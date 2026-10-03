@@ -15,10 +15,11 @@ import { useRouter } from 'expo-router';
 import { Ionicons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useLanguageStore } from '@/store/useLanguageStore';
 import { useAuthStore } from '@/store/useAuthStore';
+import { AppLanguage } from '@/constants/translations';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { t } = useLanguageStore();
+  const { language, setLanguage, t } = useLanguageStore();
   const tr = t();
 
   const {
@@ -94,12 +95,42 @@ export default function LoginScreen() {
     setHelpModalVisible(true);
   };
 
+  const fillDemoAccount = () => {
+    setEmail('demo_tester@zoobozor.uz');
+    setPassword('zoobozor2026');
+    setLocalError(null);
+    clearError();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Back button */}
-      <Pressable onPress={() => router.back()} style={styles.backBtn}>
-        <Ionicons name="arrow-back" size={24} color="#0E1424" />
-      </Pressable>
+      {/* Top Bar: Back button & Fast Language Switcher */}
+      <View style={styles.topBar}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+          <Ionicons name="arrow-back" size={24} color="#0E1424" />
+        </Pressable>
+
+        {/* Quick Language Toggle */}
+        <View style={styles.langPills}>
+          {(['uz', 'ru', 'en'] as const).map((l: AppLanguage) => (
+            <Pressable
+              key={l}
+              onPress={() => setLanguage(l)}
+              style={[
+                styles.langPill,
+                language === l && styles.langPillActive,
+              ]}>
+              <Text
+                style={[
+                  styles.langPillText,
+                  language === l && styles.langPillTextActive,
+                ]}>
+                {l === 'uz' ? 'O’zb' : l === 'ru' ? 'Рус' : 'Eng'}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -149,6 +180,7 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="email"
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
@@ -174,6 +206,9 @@ export default function LoginScreen() {
               placeholderTextColor="#94A3B8"
               secureTextEntry={!showPassword}
               autoCapitalize="none"
+              autoComplete="password"
+              returnKeyType="go"
+              onSubmitEditing={handleAuthAction}
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
@@ -191,6 +226,12 @@ export default function LoginScreen() {
               />
             </Pressable>
           </View>
+
+          {/* Demo Auto-Fill Shortcut */}
+          <Pressable onPress={fillDemoAccount} style={styles.demoFillBtn}>
+            <Ionicons name="flash" size={14} color="#16A34A" />
+            <Text style={styles.demoFillText}>Tezkor demo hisob (1 bosishda to’ldirish)</Text>
+          </Pressable>
 
           {/* Primary Action Button (Kirish / Ro'yxatdan o'tish) */}
           <Pressable
@@ -210,18 +251,16 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
-          {/* Email orqali kirish / ro'yxatdan o'tish tugmasi */}
+          {/* Quick 1-Click Guest Access */}
           <Pressable
-            onPress={handleAuthAction}
+            onPress={handleGuestLogin}
             disabled={isLoading}
             style={({ pressed }) => [
-              styles.emailBtn,
+              styles.guestFullBtn,
               pressed && styles.btnPressed,
             ]}>
-            <Ionicons name="mail" size={18} color="#D0FE17" />
-            <Text style={styles.emailBtnText}>
-              {isSignUp ? tr.signUpButton : tr.loginWithEmail}
-            </Text>
+            <FontAwesome5 name="ghost" size={16} color="#0E1424" />
+            <Text style={styles.guestFullBtnText}>Mehmon sifatida tezkor kirish (0 soniya)</Text>
           </Pressable>
 
           {/* Toggle between Login and Sign Up */}
@@ -246,20 +285,12 @@ export default function LoginScreen() {
 
           {/* Social Icons (Ghost/Guest, Google, Apple) */}
           <View style={styles.socialRow}>
-            {/* Ghost / Guest Login */}
-            <Pressable
-              onPress={handleGuestLogin}
-              disabled={isLoading}
-              style={styles.socialBtn}>
-              <FontAwesome5 name="ghost" size={26} color="#0E1424" />
-            </Pressable>
-
             {/* Google */}
             <Pressable
               onPress={handleGoogleLogin}
               disabled={isLoading}
               style={styles.socialBtn}>
-              <FontAwesome5 name="google" size={26} color="#0E1424" />
+              <FontAwesome5 name="google" size={24} color="#0E1424" />
             </Pressable>
 
             {/* Apple */}
@@ -267,7 +298,7 @@ export default function LoginScreen() {
               onPress={handleAppleLogin}
               disabled={isLoading}
               style={styles.socialBtn}>
-              <FontAwesome5 name="apple" size={30} color="#0E1424" />
+              <FontAwesome5 name="apple" size={28} color="#0E1424" />
             </Pressable>
           </View>
 
@@ -316,9 +347,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  backBtn: {
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 8,
+    paddingBottom: 4,
+  },
+  backBtn: {
+    padding: 4,
+  },
+  langPills: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 20,
+    padding: 3,
+    gap: 3,
+  },
+  langPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  langPillActive: {
+    backgroundColor: '#0E1424',
+  },
+  langPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  langPillTextActive: {
+    color: '#D0FE17',
   },
   scrollContent: {
     paddingBottom: 24,
@@ -326,18 +387,18 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 28,
     alignItems: 'center',
-    paddingTop: 6,
+    paddingTop: 2,
   },
   illustration: {
-    width: 170,
-    height: 105,
-    marginBottom: 12,
+    width: 160,
+    height: 98,
+    marginBottom: 10,
   },
   title: {
     fontSize: 22,
     fontWeight: '900',
     color: '#0E1424',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   errorBox: {
     flexDirection: 'row',
@@ -349,7 +410,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     width: '100%',
-    marginBottom: 14,
+    marginBottom: 12,
     gap: 8,
   },
   errorText: {
@@ -367,8 +428,8 @@ const styles = StyleSheet.create({
     borderColor: '#CBD5E1',
     borderRadius: 14,
     paddingHorizontal: 14,
-    height: 50,
-    marginBottom: 12,
+    height: 48,
+    marginBottom: 10,
     backgroundColor: '#FFFFFF',
   },
   inputIcon: {
@@ -379,15 +440,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0E1424',
   },
+  demoFillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    marginBottom: 8,
+  },
+  demoFillText: {
+    fontSize: 12,
+    color: '#16A34A',
+    fontWeight: '700',
+  },
   primaryBtn: {
     width: '100%',
     backgroundColor: '#0E1424',
     borderRadius: 14,
-    height: 50,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
-    marginBottom: 10,
+    marginTop: 2,
+    marginBottom: 8,
   },
   btnPressed: {
     opacity: 0.88,
@@ -398,23 +472,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-  emailBtn: {
+  guestFullBtn: {
     width: '100%',
-    backgroundColor: '#0E1424',
+    backgroundColor: '#F8FAFC',
     borderRadius: 14,
-    height: 50,
+    height: 46,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    marginBottom: 6,
   },
-  emailBtnText: {
-    color: '#D0FE17',
-    fontSize: 14,
+  guestFullBtnText: {
+    color: '#0E1424',
+    fontSize: 13,
     fontWeight: '700',
   },
   switchModeBtn: {
-    marginTop: 14,
+    marginTop: 8,
     paddingVertical: 6,
   },
   switchModeText: {
@@ -426,7 +503,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    marginVertical: 16,
+    marginVertical: 14,
     gap: 12,
   },
   dividerLine: {
@@ -443,7 +520,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 36,
+    gap: 24,
   },
   socialBtn: {
     padding: 10,
@@ -460,7 +537,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 24,
+    marginTop: 20,
   },
   footerText: {
     color: '#94A3B8',

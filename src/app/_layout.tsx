@@ -11,10 +11,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     const unsubscribe = initAuthListener();
-    // Always show 2s logo loader on every page reload
+    // Fast, crisp branded splash loader (800ms) on page reload
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 2000);
+    }, 800);
 
     return () => {
       unsubscribe();
