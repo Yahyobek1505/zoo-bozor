@@ -14,11 +14,14 @@ import { useRouter } from 'expo-router';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ZooColors } from '@/constants/zooTheme';
 import { useLanguageStore } from '@/store/useLanguageStore';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { t } = useLanguageStore();
   const tr = t();
+
+  const { user, isGuest, signOutUser } = useAuthStore();
 
   const [activeTab, setActiveTab] = useState<'info' | 'balance'>('info');
   const [adsTab, setAdsTab] = useState<'my_ads' | 'rejected'>('my_ads');
@@ -26,10 +29,22 @@ export default function ProfileScreen() {
   const [showName, setShowName] = useState(true);
   const [showPhone, setShowPhone] = useState(true);
 
+  const displayName = user?.displayName || (user?.email ? user.email.split('@')[0] : (isGuest ? 'Mehmon' : 'thalipof'));
+  const userEmail = user?.email || (isGuest ? 'Mehmon hisobi' : 'Dottallap@gmail.com');
+
   const handleLogout = () => {
     Alert.alert(tr.logout, '', [
       { text: 'Cancel', style: 'cancel' },
-      { text: tr.logout, style: 'destructive', onPress: () => router.replace('/login') },
+      {
+        text: tr.logout,
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOutUser();
+          } catch {}
+          router.replace('/login');
+        },
+      },
     ]);
   };
 
@@ -79,7 +94,7 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            <Text style={styles.userName}>thalipof</Text>
+            <Text style={styles.userName}>{displayName}</Text>
 
             <Pressable onPress={handleLogout} style={styles.logoutBtn}>
               <Feather name="log-out" size={22} color="#FFFFFF" />
@@ -176,7 +191,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.fieldTextCol}>
               <Text style={styles.fieldSub}>E-mail</Text>
-              <Text style={styles.fieldMain}>Dottallap@gmail.com</Text>
+              <Text style={styles.fieldMain}>{userEmail}</Text>
             </View>
           </View>
 

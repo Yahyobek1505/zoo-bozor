@@ -8,13 +8,17 @@ export interface Translations {
   
   // Login / Signup
   loginTitle: string;
+  signUpTitle: string;
   emailPlaceholder: string;
   passwordPlaceholder: string;
   loginButton: string;
+  signUpButton: string;
   loginWithEmail: string;
   orDivider: string;
   needHelp: string;
   guestLoginSuccess: string;
+  switchToSignUp: string;
+  switchToLogin: string;
   
   // Navigation Tabs
   tabMarket: string;
@@ -69,13 +73,17 @@ export const TRANSLATIONS: Record<AppLanguage, Translations> = {
     chooseLangTitle: 'Tilni tanlang!',
     
     loginTitle: 'Kirishni tasdiqlang!',
+    signUpTitle: 'Ro’yxatdan o’tish',
     emailPlaceholder: 'Email',
     passwordPlaceholder: 'Parol',
     loginButton: 'Kirish',
+    signUpButton: 'Ro’yxatdan o’tish',
     loginWithEmail: 'Email orqali kirish',
     orDivider: 'Or',
     needHelp: 'Yordam kerakmi?',
     guestLoginSuccess: 'Mehmon sifatida xush kelibsiz!',
+    switchToSignUp: 'Hali akkauntingiz yo’qmi? Ro’yxatdan o’tish',
+    switchToLogin: 'Akkauntingiz bormi? Kirish',
 
     tabMarket: 'Market',
     tabMap: 'Karta',
@@ -125,13 +133,17 @@ export const TRANSLATIONS: Record<AppLanguage, Translations> = {
     chooseLangTitle: 'Выберите язык!',
     
     loginTitle: 'Подтвердите вход!',
+    signUpTitle: 'Регистрация',
     emailPlaceholder: 'Email',
     passwordPlaceholder: 'Пароль',
     loginButton: 'Войти',
+    signUpButton: 'Зарегистрироваться',
     loginWithEmail: 'Войти через Email',
     orDivider: 'Или',
     needHelp: 'Нужна помощь?',
     guestLoginSuccess: 'Добро пожаловать в качестве гостя!',
+    switchToSignUp: 'Нет аккаунта? Зарегистрироваться',
+    switchToLogin: 'Уже есть аккаунт? Войти',
 
     tabMarket: 'Маркет',
     tabMap: 'Карта',
@@ -181,13 +193,17 @@ export const TRANSLATIONS: Record<AppLanguage, Translations> = {
     chooseLangTitle: 'Choose language!',
     
     loginTitle: 'Confirm login!',
+    signUpTitle: 'Create Account',
     emailPlaceholder: 'Email',
     passwordPlaceholder: 'Password',
     loginButton: 'Sign In',
+    signUpButton: 'Sign Up',
     loginWithEmail: 'Sign in with Email',
     orDivider: 'Or',
     needHelp: 'Need help?',
     guestLoginSuccess: 'Welcome as a guest!',
+    switchToSignUp: 'Don’t have an account? Sign Up',
+    switchToLogin: 'Already have an account? Sign In',
 
     tabMarket: 'Market',
     tabMap: 'Map',
