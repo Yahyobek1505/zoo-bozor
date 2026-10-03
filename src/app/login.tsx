@@ -5,9 +5,9 @@ import {
   TextInput,
   StyleSheet,
   Pressable,
-  Alert,
   ActivityIndicator,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -35,15 +35,20 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [helpModalVisible, setHelpModalVisible] = useState(false);
+
+  const activeError = localError || error;
 
   const handleAuthAction = async () => {
+    setLocalError(null);
     clearError();
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Diqqat', 'Email va parolni to’liq kiriting');
+      setLocalError('Iltimos, email va parolni to’liq kiriting.');
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Diqqat', 'Parol kamida 6 ta belgidan iborat bo’lishi kerak');
+      setLocalError('Parol kamida 6 ta belgidan iborat bo’lishi kerak.');
       return;
     }
 
@@ -55,44 +60,38 @@ export default function LoginScreen() {
       }
       router.replace('/(tabs)');
     } catch {
-      // Error message is captured and shown via store
+      // Error message is stored and displayed via activeError
     }
   };
 
   const handleGuestLogin = async () => {
+    setLocalError(null);
     clearError();
     try {
       await signInAsGuest();
       router.replace('/(tabs)');
     } catch (err: any) {
-      Alert.alert('Xatolik', err.message || 'Mehmon sifatida kirib bo’lmadi.');
+      setLocalError(err?.message || 'Mehmon sifatida kirib bo’lmadi.');
     }
   };
 
   const handleGoogleLogin = async () => {
+    setLocalError(null);
     clearError();
     try {
       await signInWithGoogle();
       router.replace('/(tabs)');
-    } catch (err: any) {
-      if (err?.code !== 'auth/popup-closed-by-user') {
-        Alert.alert('Google xatosi', err?.message || 'Google orqali kirib bo’lmadi.');
-      }
+    } catch {
+      // Error message is stored and displayed via activeError
     }
   };
 
   const handleAppleLogin = () => {
-    Alert.alert(
-      'Apple ID',
-      'Apple orqali kirish iOS qurilmalarda tez orada ishga tushadi.'
-    );
+    setLocalError('Apple ID orqali kirish faqat iOS qurilmalarda ishlaydi.');
   };
 
   const handleHelp = () => {
-    Alert.alert(
-      tr.needHelp,
-      'ZOO BOZOR Telegram: @zoobozor_support\nTel: +998 71 200 00 00'
-    );
+    setHelpModalVisible(true);
   };
 
   return (
@@ -119,11 +118,19 @@ export default function LoginScreen() {
             {isSignUp ? tr.signUpTitle : tr.loginTitle}
           </Text>
 
-          {/* Error Banner */}
-          {error ? (
+          {/* Visible Error Banner */}
+          {activeError ? (
             <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={16} color="#EF4444" />
-              <Text style={styles.errorText}>{error}</Text>
+              <Ionicons name="alert-circle" size={18} color="#EF4444" style={{ marginTop: 2 }} />
+              <Text style={styles.errorText}>{activeError}</Text>
+              <Pressable
+                onPress={() => {
+                  setLocalError(null);
+                  clearError();
+                }}
+                hitSlop={8}>
+                <Ionicons name="close" size={18} color="#991B1B" />
+              </Pressable>
             </View>
           ) : null}
 
@@ -145,7 +152,10 @@ export default function LoginScreen() {
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
-                if (error) clearError();
+                if (activeError) {
+                  setLocalError(null);
+                  clearError();
+                }
               }}
             />
           </View>
@@ -167,7 +177,10 @@ export default function LoginScreen() {
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
-                if (error) clearError();
+                if (activeError) {
+                  setLocalError(null);
+                  clearError();
+                }
               }}
             />
             <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={8}>
@@ -214,6 +227,7 @@ export default function LoginScreen() {
           {/* Toggle between Login and Sign Up */}
           <Pressable
             onPress={() => {
+              setLocalError(null);
               clearError();
               setIsSignUp(!isSignUp);
             }}
@@ -268,6 +282,31 @@ export default function LoginScreen() {
           </Pressable>
         </View>
       </ScrollView>
+
+      {/* Help Modal */}
+      <Modal
+        visible={helpModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setHelpModalVisible(false)}>
+        <View style={styles.helpModalOverlay}>
+          <View style={styles.helpModalCard}>
+            <Ionicons name="information-circle" size={44} color="#0E1424" style={{ marginBottom: 12 }} />
+            <Text style={styles.helpTitle}>{tr.needHelp}</Text>
+            <Text style={styles.helpText}>
+              ZOO BOZOR qo’llab-quvvatlash xizmati:{'\n\n'}
+              ✈️ Telegram: @zoobozor_support{'\n'}
+              📞 Telefon: +998 71 200 00 00{'\n'}
+              ⏰ Ish vaqti: 09:00 - 20:00 (Har kuni)
+            </Text>
+            <Pressable
+              onPress={() => setHelpModalVisible(false)}
+              style={styles.helpCloseBtn}>
+              <Text style={styles.helpCloseBtnText}>Tushunarli</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -302,15 +341,15 @@ const styles = StyleSheet.create({
   },
   errorBox: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
     borderColor: '#FECACA',
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     width: '100%',
-    marginBottom: 12,
+    marginBottom: 14,
     gap: 8,
   },
   errorText: {
@@ -318,6 +357,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     flex: 1,
+    lineHeight: 18,
   },
   inputBox: {
     width: '100%',
@@ -426,5 +466,46 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 12,
     fontWeight: '600',
+  },
+  helpModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  helpModalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+  },
+  helpTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0E1424',
+    marginBottom: 12,
+  },
+  helpText: {
+    fontSize: 14,
+    color: '#475569',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+  helpCloseBtn: {
+    backgroundColor: '#0E1424',
+    borderRadius: 12,
+    height: 44,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  helpCloseBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

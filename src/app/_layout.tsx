@@ -1,15 +1,25 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/useAuthStore';
+import { AppSplashScreen } from '@/components/AppSplashScreen';
 
 export default function RootLayout() {
   const { initAuthListener } = useAuthStore();
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     const unsubscribe = initAuthListener();
-    return () => unsubscribe();
+    // Always show 2s logo loader on every page reload
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   return (
@@ -65,6 +75,9 @@ export default function RootLayout() {
           }}
         />
       </Stack>
+
+      {/* Global 2s splash/loader overlay on every page load/reload */}
+      {showSplash && <AppSplashScreen />}
     </SafeAreaProvider>
   );
 }

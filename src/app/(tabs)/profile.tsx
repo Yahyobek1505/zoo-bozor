@@ -6,7 +6,7 @@ import {
   ScrollView,
   Pressable,
   Switch,
-  Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -28,24 +28,21 @@ export default function ProfileScreen() {
   
   const [showName, setShowName] = useState(true);
   const [showPhone, setShowPhone] = useState(true);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   const displayName = user?.displayName || (user?.email ? user.email.split('@')[0] : (isGuest ? 'Mehmon' : 'thalipof'));
   const userEmail = user?.email || (isGuest ? 'Mehmon hisobi' : 'Dottallap@gmail.com');
 
   const handleLogout = () => {
-    Alert.alert(tr.logout, '', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: tr.logout,
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOutUser();
-          } catch {}
-          router.replace('/login');
-        },
-      },
-    ]);
+    setLogoutModalVisible(true);
+  };
+
+  const confirmLogout = async () => {
+    setLogoutModalVisible(false);
+    try {
+      await signOutUser();
+    } catch {}
+    router.replace('/login');
   };
 
   return (
@@ -253,6 +250,37 @@ export default function ProfileScreen() {
         {/* Spacer for bottom navigation */}
         <View style={{ height: 90 }} />
       </ScrollView>
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        visible={logoutModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLogoutModalVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.logoutIconCircle}>
+              <Feather name="log-out" size={28} color="#EF4444" />
+            </View>
+            <Text style={styles.modalTitle}>{tr.logout}</Text>
+            <Text style={styles.modalSubtitle}>
+              Haqiqatan ham hisobingizdan chiqmoqchimisiz?
+            </Text>
+            <View style={styles.modalBtnRow}>
+              <Pressable
+                onPress={() => setLogoutModalVisible(false)}
+                style={styles.cancelBtn}>
+                <Text style={styles.cancelBtnText}>Bekor qilish</Text>
+              </Pressable>
+              <Pressable
+                onPress={confirmLogout}
+                style={styles.confirmLogoutBtn}>
+                <Text style={styles.confirmLogoutBtnText}>{tr.logout}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -455,5 +483,78 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 13,
     fontWeight: '500',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  logoutIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0E1424',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  modalBtnRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  cancelBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  confirmLogoutBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmLogoutBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
