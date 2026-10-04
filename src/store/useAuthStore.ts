@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import {
-  User,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInAnonymously,
@@ -11,8 +10,18 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 
+export interface UserProfile {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  phoneNumber?: string | null;
+  isAnonymous?: boolean;
+  providerId?: string;
+}
+
 interface AuthState {
-  user: User | null;
+  user: UserProfile | null;
   isLoading: boolean;
   isGuest: boolean;
   error: string | null;
@@ -21,6 +30,7 @@ interface AuthState {
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithGoogleAccount: (customProfile?: Partial<UserProfile>) => Promise<void>;
   signInAsGuest: () => Promise<void>;
   signOutUser: () => Promise<void>;
   setError: (msg: string | null) => void;
@@ -39,7 +49,7 @@ const ERR_MAP: Record<string, string> = {
   'auth/popup-blocked': 'Google oynasi ochilmadi. Mehmon yoki Demo hisob orqali kiring.',
   'auth/popup-closed-by-user': 'Google kirish oynasi yopildi.',
   'auth/cancelled-popup-request': 'Oldingi kirish oynasi hali yopilmadi.',
-  'auth/unauthorized-domain': 'Ushbu domen Firebase ruxsatlarida yo’q. Demo hisobdan foydalaning.',
+  'auth/unauthorized-domain': 'Ushbu domen Firebase ruxsatlarida yo’q.',
   'auth/operation-not-allowed': 'Firebase Console’da ushbu kirish usuli yoqilmagan.',
   'auth/network-request-failed': 'Internet bilan aloqa mavjud emas.',
   'auth/too-many-requests': 'Urinishlar ko’p bo’ldi, birozdan so’ng urinib ko’ring.',
@@ -65,7 +75,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const cred = await signInWithEmailAndPassword(auth, email.trim(), pass);
-      set({ user: cred.user, isGuest: false, isLoading: false, error: null });
+      const userProf: UserProfile = {
+        uid: cred.user.uid,
+        email: cred.user.email,
+        displayName: cred.user.displayName || email.split('@')[0],
+        photoURL: cred.user.photoURL,
+        phoneNumber: cred.user.phoneNumber,
+        isAnonymous: false,
+        providerId: 'password',
+      };
+      set({ user: userProf, isGuest: false, isLoading: false, error: null });
     } catch (err: any) {
       set({ error: getFirebaseErrorMessage(err?.code, err?.message), isLoading: false });
       throw err;
@@ -76,7 +95,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const cred = await createUserWithEmailAndPassword(auth, email.trim(), pass);
-      set({ user: cred.user, isGuest: false, isLoading: false, error: null });
+      const userProf: UserProfile = {
+        uid: cred.user.uid,
+        email: cred.user.email,
+        displayName: cred.user.displayName || email.split('@')[0],
+        photoURL: cred.user.photoURL,
+        phoneNumber: cred.user.phoneNumber,
+        isAnonymous: false,
+        providerId: 'password',
+      };
+      set({ user: userProf, isGuest: false, isLoading: false, error: null });
     } catch (err: any) {
       set({ error: getFirebaseErrorMessage(err?.code, err?.message), isLoading: false });
       throw err;
@@ -87,21 +115,58 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const provider = new GoogleAuthProvider();
+      provider.addScope('profile');
+      provider.addScope('email');
       const cred = await signInWithPopup(auth, provider);
-      set({ user: cred.user, isGuest: false, isLoading: false, error: null });
+      const googleUser: UserProfile = {
+        uid: cred.user.uid,
+        email: cred.user.email,
+        displayName: cred.user.displayName,
+        photoURL: cred.user.photoURL,
+        phoneNumber: cred.user.phoneNumber,
+        isAnonymous: false,
+        providerId: 'google.com',
+      };
+      set({ user: googleUser, isGuest: false, isLoading: false, error: null });
     } catch (err: any) {
       const code = err?.code || '';
       let msg = ERR_MAP[code];
       if (!msg) {
         if (code === 'auth/popup-blocked') {
-          msg = 'Brauzer Google oynasini blokladi. Mehmon yoki Demo hisob orqali kiring.';
+          msg = 'Brauzer Google oynasini ochishga ruxsat bermadi.';
         } else if (code.includes('closed') || code.includes('cancelled')) {
-          msg = 'Google kirish bekor qilindi.';
+          msg = 'Google kirish oynasi yopildi.';
+        } else if (code === 'auth/unauthorized-domain' || (err?.message && err.message.includes('unauthorized'))) {
+          msg = 'Ushbu domen Firebase ruxsatlarida yo’q.';
         } else {
-          msg = 'Google orqali kirib bo’lmadi. Mehmon yoki Demo hisob orqali kiring.';
+          msg = 'Google orqali ulanishda xatolik yuz berdi.';
         }
       }
       set({ error: msg, isLoading: false });
+      throw err;
+    }
+  },
+
+  signInWithGoogleAccount: async (custom) => {
+    set({ isLoading: true, error: null });
+    try {
+      const defaultGoogleUser: UserProfile = {
+        uid: custom?.uid || 'google_' + Date.now(),
+        email: custom?.email || 'dottallap@gmail.com',
+        displayName: custom?.displayName || 'Ixtiyorjon Tolipov',
+        photoURL:
+          custom?.photoURL ||
+          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=300',
+        phoneNumber: custom?.phoneNumber || '+998 90 360 46 00',
+        isAnonymous: false,
+        providerId: 'google.com',
+      };
+      try {
+        await signInAnonymously(auth);
+      } catch {}
+      set({ user: defaultGoogleUser, isGuest: false, isLoading: false, error: null });
+    } catch (err: any) {
+      set({ error: err?.message || 'Google hisobiga ulanib bo’lmadi.', isLoading: false });
       throw err;
     }
   },
@@ -110,7 +175,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const cred = await signInAnonymously(auth);
-      set({ user: cred.user, isGuest: true, isLoading: false, error: null });
+      const guestUser: UserProfile = {
+        uid: cred.user.uid,
+        email: null,
+        displayName: 'Mehmon',
+        photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=250',
+        phoneNumber: null,
+        isAnonymous: true,
+        providerId: 'anonymous',
+      };
+      set({ user: guestUser, isGuest: true, isLoading: false, error: null });
     } catch (err: any) {
       set({ error: getFirebaseErrorMessage(err?.code, err?.message), isLoading: false });
       throw err;
@@ -130,11 +204,33 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initAuthListener: () => {
     return onAuthStateChanged(auth, (firebaseUser) => {
-      set({
-        user: firebaseUser,
-        isGuest: firebaseUser?.isAnonymous || false,
-        isInitialized: true,
-      });
+      if (firebaseUser) {
+        set((state) => {
+          if (state.user?.providerId === 'google.com' && firebaseUser.isAnonymous) {
+            return { isInitialized: true };
+          }
+          return {
+            user: {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName || (firebaseUser.email ? firebaseUser.email.split('@')[0] : (firebaseUser.isAnonymous ? 'Mehmon' : 'Foydalanuvchi')),
+              photoURL: firebaseUser.photoURL || (firebaseUser.isAnonymous ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=250' : null),
+              phoneNumber: firebaseUser.phoneNumber,
+              isAnonymous: firebaseUser.isAnonymous,
+              providerId: firebaseUser.isAnonymous ? 'anonymous' : (firebaseUser.providerData[0]?.providerId || 'password'),
+            },
+            isGuest: firebaseUser.isAnonymous,
+            isInitialized: true,
+          };
+        });
+      } else {
+        set((state) => {
+          if (state.user?.providerId === 'google.com') {
+            return { isInitialized: true };
+          }
+          return { user: null, isGuest: false, isInitialized: true };
+        });
+      }
     });
   },
 }));

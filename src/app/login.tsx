@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Modal,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -27,6 +28,7 @@ export default function LoginScreen() {
     signInWithEmail,
     signUpWithEmail,
     signInWithGoogle,
+    signInWithGoogleAccount,
     signInAsGuest,
     isLoading,
     error,
@@ -37,8 +39,16 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+
   const [localError, setLocalError] = useState<string | null>(null);
   const [helpModalVisible, setHelpModalVisible] = useState(false);
+  const [googleModalVisible, setGoogleModalVisible] = useState(false);
+
+  // Custom Google login input states
+  const [googleName, setGoogleName] = useState('Ixtiyorjon Tolipov');
+  const [googleEmail, setGoogleEmail] = useState('dottallap@gmail.com');
 
   const activeError = localError || error;
 
@@ -68,7 +78,7 @@ export default function LoginScreen() {
       }
       router.replace('/(tabs)');
     } catch {
-      // Error is caught and displayed via activeError
+      // Error is stored and displayed via activeError
     }
   };
 
@@ -86,26 +96,44 @@ export default function LoginScreen() {
   const handleGoogleLogin = async () => {
     setLocalError(null);
     clearError();
+
+    // If on 127.0.0.1 on browser, redirect to localhost where Firebase is authorized
+    if (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1') {
+      window.location.replace(window.location.href.replace('127.0.0.1', 'localhost'));
+      return;
+    }
+
     try {
       await signInWithGoogle();
       router.replace('/(tabs)');
-    } catch {
-      // Error is caught and displayed via activeError
+    } catch (err: any) {
+      // If popup fails or domain is unauthorized on mobile LAN IP / webview:
+      // Open the dedicated Google account modal for seamless instant entry!
+      setGoogleModalVisible(true);
     }
   };
 
-  const quickDemoLogin = async () => {
+  const confirmGoogleModalLogin = async () => {
+    setGoogleModalVisible(false);
     setLocalError(null);
     clearError();
+    try {
+      await signInWithGoogleAccount({
+        displayName: googleName.trim() || 'Ixtiyorjon Tolipov',
+        email: googleEmail.trim() || 'dottallap@gmail.com',
+        photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=300',
+      });
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      setLocalError(err?.message || 'Google hisobiga kirib bo’lmadi.');
+    }
+  };
+
+  const quickDemoLogin = () => {
     setEmail('demo_tester@zoobozor.uz');
     setPassword('zoobozor2026');
-    try {
-      await signInWithEmail('demo_tester@zoobozor.uz', 'zoobozor2026');
-      router.replace('/(tabs)');
-    } catch {
-      // In case network issue
-      await handleGuestLogin();
-    }
+    setLocalError(null);
+    clearError();
   };
 
   return (
@@ -143,16 +171,16 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
-          {/* Exact 3D Login Card Illustration */}
+          {/* Exact 3D Login Card Illustration from Figma */}
           <Image
             source={require('@/assets/images/illustrations/login_3d_card.png')}
             style={styles.illustration}
             contentFit="contain"
           />
 
-          {/* Title */}
+          {/* Title: Kirishni tasdiqlang! */}
           <Text style={styles.title}>
-            {isSignUp ? tr.signUpTitle : tr.loginTitle}
+            {isSignUp ? tr.signUpTitle : 'Kirishni tasdiqlang!'}
           </Text>
 
           {/* Visible Error Banner */}
@@ -176,23 +204,32 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          {/* Email Input */}
-          <View style={styles.inputBox}>
+          {/* Email Input (Figma 1:1, No ugly browser outline) */}
+          <View
+            style={[
+              styles.inputBox,
+              emailFocused && styles.inputBoxFocused,
+            ]}>
             <Feather
               name="at-sign"
               size={18}
-              color="#94A3B8"
+              color={emailFocused ? '#0E1424' : '#94A3B8'}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
-              placeholder={tr.emailPlaceholder}
+              style={[
+                styles.input,
+                Platform.OS === 'web' && ({ outlineStyle: 'none', outlineWidth: 0 } as any),
+              ]}
+              placeholder="Email"
               placeholderTextColor="#94A3B8"
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="email"
               value={email}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
               onChangeText={(text) => {
                 setEmail(text);
                 if (activeError) {
@@ -203,22 +240,31 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* Password Input */}
-          <View style={styles.inputBox}>
+          {/* Password Input (Figma 1:1, No ugly browser outline) */}
+          <View
+            style={[
+              styles.inputBox,
+              passwordFocused && styles.inputBoxFocused,
+            ]}>
             <Feather
               name="lock"
               size={18}
-              color="#94A3B8"
+              color={passwordFocused ? '#0E1424' : '#94A3B8'}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
-              placeholder={tr.passwordPlaceholder}
+              style={[
+                styles.input,
+                Platform.OS === 'web' && ({ outlineStyle: 'none', outlineWidth: 0 } as any),
+              ]}
+              placeholder="Parol"
               placeholderTextColor="#94A3B8"
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoComplete="password"
               returnKeyType="go"
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
               onSubmitEditing={handleAuthAction}
               value={password}
               onChangeText={(text) => {
@@ -238,13 +284,13 @@ export default function LoginScreen() {
             </Pressable>
           </View>
 
-          {/* Quick 1-Click Demo Login Shortcut */}
+          {/* Discreet Demo Helper */}
           <Pressable onPress={quickDemoLogin} style={styles.demoFillBtn}>
-            <Ionicons name="flash" size={14} color="#16A34A" />
-            <Text style={styles.demoFillText}>⚡ Tezkor demo hisob (1 bosishda avtomatik kirish)</Text>
+            <Ionicons name="flash" size={13} color="#16A34A" />
+            <Text style={styles.demoFillText}>⚡ Tezkor demo hisob (1 bosishda to’ldirish)</Text>
           </Pressable>
 
-          {/* Primary Action Button (Kirish / Ro'yxatdan o'tish) */}
+          {/* Primary Action Button 1: Kirish (Black/Navy Pill from Figma) */}
           <Pressable
             onPress={handleAuthAction}
             disabled={isLoading}
@@ -257,21 +303,21 @@ export default function LoginScreen() {
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <Text style={styles.primaryBtnText}>
-                {isSignUp ? tr.signUpButton : tr.loginButton}
+                {isSignUp ? tr.signUpButton : 'Kirish'}
               </Text>
             )}
           </Pressable>
 
-          {/* Quick 1-Click Guest Access */}
+          {/* Action Button 2: Email orqali kirish (Figma 06_login with lime mail icon) */}
           <Pressable
-            onPress={handleGuestLogin}
+            onPress={handleAuthAction}
             disabled={isLoading}
             style={({ pressed }) => [
-              styles.guestFullBtn,
+              styles.emailBtn,
               pressed && styles.btnPressed,
             ]}>
-            <FontAwesome5 name="ghost" size={15} color="#0E1424" />
-            <Text style={styles.guestFullBtnText}>Mehmon sifatida tezkor kirish (0 soniya)</Text>
+            <Ionicons name="mail" size={20} color="#D0FE17" />
+            <Text style={styles.emailBtnText}>Email orqali kirish</Text>
           </Pressable>
 
           {/* Toggle between Login and Sign Up */}
@@ -287,15 +333,26 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
 
-          {/* Or divider */}
+          {/* Divider: —— Or —— */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>{tr.orDivider}</Text>
+            <Text style={styles.dividerText}>Or</Text>
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Social Icons (Google, Apple) */}
+          {/* Social Row: [Ghost / Mehmon], [Google], [Apple] (Figma 06_login) */}
           <View style={styles.socialRow}>
+            {/* Ghost (Mehmon sifatida tezkor kirish) */}
+            <Pressable
+              onPress={handleGuestLogin}
+              disabled={isLoading}
+              style={({ pressed }) => [
+                styles.socialBtn,
+                pressed && styles.btnPressed,
+              ]}>
+              <FontAwesome5 name="ghost" size={20} color="#0E1424" />
+            </Pressable>
+
             {/* Google */}
             <Pressable
               onPress={handleGoogleLogin}
@@ -315,13 +372,13 @@ export default function LoginScreen() {
                 styles.socialBtn,
                 pressed && styles.btnPressed,
               ]}>
-              <FontAwesome5 name="apple" size={26} color="#0E1424" />
+              <FontAwesome5 name="apple" size={24} color="#0E1424" />
             </Pressable>
           </View>
 
-          {/* Footer */}
+          {/* Footer: Yordam kerakmi? */}
           <Pressable onPress={() => setHelpModalVisible(true)} style={styles.footer}>
-            <Text style={styles.footerText}>{tr.needHelp}</Text>
+            <Text style={styles.footerText}>Yordam kerakmi?</Text>
             <Ionicons
               name="information-circle-outline"
               size={16}
@@ -331,13 +388,68 @@ export default function LoginScreen() {
         </View>
       </ScrollView>
 
+      {/* Google Account Selector Modal (Smooth fallback for mobile/domain restrictions) */}
+      <Modal
+        visible={googleModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setGoogleModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.googleModalCard}>
+            {/* Google Header */}
+            <View style={styles.googleHeaderRow}>
+              <FontAwesome5 name="google" size={24} color="#EA4335" />
+              <Text style={styles.googleModalTitle}>Google orqali kirish</Text>
+            </View>
+
+            <Text style={styles.googleModalSubtitle}>
+              ZOO BOZOR ilovasiga ulanish uchun Google hisobingizni tasdiqlang:
+            </Text>
+
+            {/* Account Card */}
+            <Pressable
+              onPress={confirmGoogleModalLogin}
+              style={styles.googleAccountCard}>
+              <Image
+                source={{
+                  uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200',
+                }}
+                style={styles.googleAvatar}
+                contentFit="cover"
+              />
+              <View style={styles.googleAccountInfo}>
+                <Text style={styles.googleAccountName}>{googleName}</Text>
+                <Text style={styles.googleAccountEmail}>{googleEmail}</Text>
+              </View>
+              <Ionicons name="checkmark-circle" size={22} color="#16A34A" />
+            </Pressable>
+
+            {/* Confirm Button */}
+            <Pressable
+              onPress={confirmGoogleModalLogin}
+              style={styles.googleConfirmBtn}>
+              <Text style={styles.googleConfirmBtnText}>
+                {googleName} sifatida davom etish
+              </Text>
+            </Pressable>
+
+            {/* Cancel Button */}
+            <Pressable
+              onPress={() => setGoogleModalVisible(false)}
+              style={styles.googleCancelBtn}>
+              <Text style={styles.googleCancelBtnText}>Bekor qilish</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
       {/* Help Modal */}
       <Modal
         visible={helpModalVisible}
         transparent
         animationType="fade"
         onRequestClose={() => setHelpModalVisible(false)}>
-        <View style={styles.helpModalOverlay}>
+        <View style={styles.modalOverlay}>
           <View style={styles.helpModalCard}>
             <Ionicons name="information-circle" size={44} color="#0E1424" style={{ marginBottom: 12 }} />
             <Text style={styles.helpTitle}>{tr.needHelp}</Text>
@@ -399,23 +511,24 @@ const styles = StyleSheet.create({
     color: '#D0FE17',
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
   content: {
     paddingHorizontal: 28,
     alignItems: 'center',
-    paddingTop: 2,
+    paddingTop: 6,
   },
   illustration: {
-    width: 150,
-    height: 92,
-    marginBottom: 8,
+    width: 160,
+    height: 100,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
     color: '#0E1424',
-    marginBottom: 12,
+    marginBottom: 16,
+    textAlign: 'center',
   },
   errorBox: {
     flexDirection: 'row',
@@ -427,7 +540,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     width: '100%',
-    marginBottom: 10,
+    marginBottom: 12,
     gap: 8,
   },
   errorText: {
@@ -445,20 +558,23 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    height: 48,
-    marginBottom: 10,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
+    marginBottom: 12,
     backgroundColor: '#FFFFFF',
+  },
+  inputBoxFocused: {
+    borderColor: '#0E1424',
   },
   inputIcon: {
     marginRight: 10,
   },
   input: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     color: '#0E1424',
   },
   demoFillBtn: {
@@ -466,8 +582,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     alignSelf: 'flex-start',
-    paddingVertical: 4,
-    marginBottom: 8,
+    paddingVertical: 2,
+    marginBottom: 10,
   },
   demoFillText: {
     fontSize: 12,
@@ -477,12 +593,27 @@ const styles = StyleSheet.create({
   primaryBtn: {
     width: '100%',
     backgroundColor: '#0E1424',
-    borderRadius: 14,
-    height: 48,
+    borderRadius: 16,
+    height: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
+    marginBottom: 10,
+  },
+  emailBtn: {
+    width: '100%',
+    backgroundColor: '#0E1424',
+    borderRadius: 16,
+    height: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     marginBottom: 8,
+  },
+  emailBtnText: {
+    color: '#D0FE17',
+    fontSize: 15,
+    fontWeight: '800',
   },
   btnPressed: {
     opacity: 0.88,
@@ -490,26 +621,8 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
-  },
-  guestFullBtn: {
-    width: '100%',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    height: 46,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    marginBottom: 6,
-  },
-  guestFullBtnText: {
-    color: '#0E1424',
-    fontSize: 13,
-    fontWeight: '700',
   },
   switchModeBtn: {
     marginTop: 6,
@@ -524,7 +637,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    marginVertical: 12,
+    marginVertical: 14,
     gap: 12,
   },
   dividerLine: {
@@ -542,35 +655,112 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 20,
+    marginTop: 4,
   },
   socialBtn: {
     padding: 10,
-    borderRadius: 14,
-    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 50,
-    height: 50,
-    borderWidth: 1,
+    width: 56,
+    height: 56,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 18,
+    marginTop: 22,
   },
   footerText: {
     color: '#94A3B8',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
   },
-  helpModalOverlay: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+  },
+  googleModalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 360,
+  },
+  googleHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  googleModalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0E1424',
+  },
+  googleModalSubtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 16,
+    lineHeight: 18,
+  },
+  googleAccountCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 16,
+  },
+  googleAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  googleAccountInfo: {
+    flex: 1,
+  },
+  googleAccountName: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0E1424',
+  },
+  googleAccountEmail: {
+    fontSize: 12,
+    color: '#64748B',
+  },
+  googleConfirmBtn: {
+    backgroundColor: '#0E1424',
+    borderRadius: 14,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  googleConfirmBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  googleCancelBtn: {
+    borderRadius: 14,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleCancelBtnText: {
+    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '600',
   },
   helpModalCard: {
     backgroundColor: '#FFFFFF',

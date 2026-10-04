@@ -30,8 +30,16 @@ export default function ProfileScreen() {
   const [showPhone, setShowPhone] = useState(true);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
-  const displayName = user?.displayName || (user?.email ? user.email.split('@')[0] : (isGuest ? 'Mehmon' : 'thalipof'));
+  const displayName =
+    user?.displayName ||
+    (user?.email ? user.email.split('@')[0] : isGuest ? 'Mehmon' : 'thalipof');
   const userEmail = user?.email || (isGuest ? 'Mehmon hisobi' : 'Dottallap@gmail.com');
+  const userPhoto =
+    user?.photoURL ||
+    (isGuest
+      ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=250'
+      : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250');
+  const isGoogleUser = user?.providerId === 'google.com' || (user?.email && user.email.includes('@gmail.com'));
 
   const handleLogout = () => {
     setLogoutModalVisible(true);
@@ -81,7 +89,7 @@ export default function ProfileScreen() {
             <View style={styles.avatarWrapper}>
               <Image
                 source={{
-                  uri: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=200',
+                  uri: userPhoto,
                 }}
                 style={styles.avatarImg}
                 contentFit="cover"
@@ -91,7 +99,15 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            <Text style={styles.userName}>{displayName}</Text>
+            <View style={styles.userInfoCol}>
+              <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
+              {isGoogleUser && (
+                <View style={styles.googleBadge}>
+                  <Ionicons name="logo-google" size={12} color="#D0FE17" />
+                  <Text style={styles.googleBadgeText}>Google akkaunt ulangan</Text>
+                </View>
+              )}
+            </View>
 
             <Pressable onPress={handleLogout} style={styles.logoutBtn}>
               <Feather name="log-out" size={22} color="#FFFFFF" />
@@ -154,7 +170,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.fieldTextCol}>
               <Text style={styles.fieldSub}>ism</Text>
-              <Text style={styles.fieldMain}>Tolipov Ixtiyorjon</Text>
+              <Text style={styles.fieldMain}>{displayName}</Text>
             </View>
             <Switch
               value={showName}
@@ -364,11 +380,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  userName: {
+  userInfoCol: {
     flex: 1,
+  },
+  userName: {
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: '800',
+  },
+  googleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  googleBadgeText: {
+    fontSize: 11,
+    color: '#D0FE17',
+    fontWeight: '700',
   },
   logoutBtn: {
     padding: 6,

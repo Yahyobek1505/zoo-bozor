@@ -10,13 +10,18 @@ export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
+    // Auto-normalize 127.0.0.1 to localhost for authorized Firebase Auth domain
+    if (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1') {
+      window.location.replace(window.location.href.replace('127.0.0.1', 'localhost'));
+      return;
+    }
+
     const unsubscribe = initAuthListener();
     return unsubscribe;
   }, []);
 
   useEffect(() => {
     if (isInitialized) {
-      // Snappy and smooth 500ms exit once auth state is initialized
       const timer = setTimeout(() => {
         setShowSplash(false);
       }, 500);
