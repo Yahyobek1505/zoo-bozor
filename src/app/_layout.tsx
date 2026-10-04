@@ -6,21 +6,23 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { AppSplashScreen } from '@/components/AppSplashScreen';
 
 export default function RootLayout() {
-  const { initAuthListener } = useAuthStore();
+  const { initAuthListener, isInitialized } = useAuthStore();
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     const unsubscribe = initAuthListener();
-    // Fast, crisp branded splash loader (800ms) on page reload
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 800);
-
-    return () => {
-      unsubscribe();
-      clearTimeout(timer);
-    };
+    return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (isInitialized) {
+      // Snappy and smooth 500ms exit once auth state is initialized
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialized]);
 
   return (
     <SafeAreaProvider>
@@ -76,7 +78,7 @@ export default function RootLayout() {
         />
       </Stack>
 
-      {/* Global 2s splash/loader overlay on every page load/reload */}
+      {/* Branded splash overlay while auth state initializes */}
       {showSplash && <AppSplashScreen />}
     </SafeAreaProvider>
   );

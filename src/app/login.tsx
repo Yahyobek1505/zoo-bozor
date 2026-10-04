@@ -68,7 +68,7 @@ export default function LoginScreen() {
       }
       router.replace('/(tabs)');
     } catch {
-      // Error message is stored and displayed via activeError
+      // Error is caught and displayed via activeError
     }
   };
 
@@ -90,23 +90,22 @@ export default function LoginScreen() {
       await signInWithGoogle();
       router.replace('/(tabs)');
     } catch {
-      // Error message is stored and displayed via activeError
+      // Error is caught and displayed via activeError
     }
   };
 
-  const handleAppleLogin = () => {
-    setLocalError('Apple ID orqali kirish faqat iOS qurilmalarda ishlaydi.');
-  };
-
-  const handleHelp = () => {
-    setHelpModalVisible(true);
-  };
-
-  const fillDemoAccount = () => {
-    setEmail('demo_tester@zoobozor.uz');
-    setPassword('zoobozor2026');
+  const quickDemoLogin = async () => {
     setLocalError(null);
     clearError();
+    setEmail('demo_tester@zoobozor.uz');
+    setPassword('zoobozor2026');
+    try {
+      await signInWithEmail('demo_tester@zoobozor.uz', 'zoobozor2026');
+      router.replace('/(tabs)');
+    } catch {
+      // In case network issue
+      await handleGuestLogin();
+    }
   };
 
   return (
@@ -160,7 +159,12 @@ export default function LoginScreen() {
           {activeError ? (
             <View style={styles.errorBox}>
               <Ionicons name="alert-circle" size={18} color="#EF4444" style={{ marginTop: 2 }} />
-              <Text style={styles.errorText}>{activeError}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.errorText}>{activeError}</Text>
+                <Pressable onPress={handleGuestLogin} style={{ marginTop: 4 }}>
+                  <Text style={styles.errorActionText}>⚡ Mehmon sifatida 1 bosishda kiring →</Text>
+                </Pressable>
+              </View>
               <Pressable
                 onPress={() => {
                   setLocalError(null);
@@ -234,10 +238,10 @@ export default function LoginScreen() {
             </Pressable>
           </View>
 
-          {/* Demo Auto-Fill Shortcut */}
-          <Pressable onPress={fillDemoAccount} style={styles.demoFillBtn}>
+          {/* Quick 1-Click Demo Login Shortcut */}
+          <Pressable onPress={quickDemoLogin} style={styles.demoFillBtn}>
             <Ionicons name="flash" size={14} color="#16A34A" />
-            <Text style={styles.demoFillText}>Tezkor demo hisob (1 bosishda to’ldirish)</Text>
+            <Text style={styles.demoFillText}>⚡ Tezkor demo hisob (1 bosishda avtomatik kirish)</Text>
           </Pressable>
 
           {/* Primary Action Button (Kirish / Ro'yxatdan o'tish) */}
@@ -266,7 +270,7 @@ export default function LoginScreen() {
               styles.guestFullBtn,
               pressed && styles.btnPressed,
             ]}>
-            <FontAwesome5 name="ghost" size={16} color="#0E1424" />
+            <FontAwesome5 name="ghost" size={15} color="#0E1424" />
             <Text style={styles.guestFullBtnText}>Mehmon sifatida tezkor kirish (0 soniya)</Text>
           </Pressable>
 
@@ -290,27 +294,33 @@ export default function LoginScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Social Icons (Ghost/Guest, Google, Apple) */}
+          {/* Social Icons (Google, Apple) */}
           <View style={styles.socialRow}>
             {/* Google */}
             <Pressable
               onPress={handleGoogleLogin}
               disabled={isLoading}
-              style={styles.socialBtn}>
-              <FontAwesome5 name="google" size={24} color="#0E1424" />
+              style={({ pressed }) => [
+                styles.socialBtn,
+                pressed && styles.btnPressed,
+              ]}>
+              <FontAwesome5 name="google" size={22} color="#0E1424" />
             </Pressable>
 
             {/* Apple */}
             <Pressable
-              onPress={handleAppleLogin}
+              onPress={() => setLocalError('Apple ID orqali kirish faqat iOS ilovada ishlaydi.')}
               disabled={isLoading}
-              style={styles.socialBtn}>
-              <FontAwesome5 name="apple" size={28} color="#0E1424" />
+              style={({ pressed }) => [
+                styles.socialBtn,
+                pressed && styles.btnPressed,
+              ]}>
+              <FontAwesome5 name="apple" size={26} color="#0E1424" />
             </Pressable>
           </View>
 
           {/* Footer */}
-          <Pressable onPress={handleHelp} style={styles.footer}>
+          <Pressable onPress={() => setHelpModalVisible(true)} style={styles.footer}>
             <Text style={styles.footerText}>{tr.needHelp}</Text>
             <Ionicons
               name="information-circle-outline"
@@ -397,15 +407,15 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   illustration: {
-    width: 160,
-    height: 98,
-    marginBottom: 10,
+    width: 150,
+    height: 92,
+    marginBottom: 8,
   },
   title: {
     fontSize: 22,
     fontWeight: '900',
     color: '#0E1424',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   errorBox: {
     flexDirection: 'row',
@@ -417,15 +427,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     width: '100%',
-    marginBottom: 12,
+    marginBottom: 10,
     gap: 8,
   },
   errorText: {
     color: '#DC2626',
     fontSize: 13,
     fontWeight: '600',
-    flex: 1,
     lineHeight: 18,
+  },
+  errorActionText: {
+    color: '#16A34A',
+    fontSize: 12,
+    fontWeight: '700',
   },
   inputBox: {
     width: '100%',
@@ -498,8 +512,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   switchModeBtn: {
-    marginTop: 8,
-    paddingVertical: 6,
+    marginTop: 6,
+    paddingVertical: 4,
   },
   switchModeText: {
     color: '#2563EB',
@@ -510,7 +524,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    marginVertical: 14,
+    marginVertical: 12,
     gap: 12,
   },
   dividerLine: {
@@ -527,7 +541,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 24,
+    gap: 20,
   },
   socialBtn: {
     padding: 10,
@@ -535,8 +549,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 52,
-    height: 52,
+    width: 50,
+    height: 50,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
@@ -544,7 +558,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 20,
+    marginTop: 18,
   },
   footerText: {
     color: '#94A3B8',
